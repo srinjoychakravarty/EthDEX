@@ -11,7 +11,8 @@ contract('token_management', function(accounts) {
   beforeEach(async () => {
   	  sender = await DEXExchange.new();
       satva = web3.utils.asciiToHex('SATVA');
-      arbitary_addr = web3.utils.toChecksumAddress('0x69c4bb240cf05d51eeab6985bab35527d04a8c64');
+      // Hex Address is converted to mixed case so that test passes
+      arbitary_addr = web3.utils.toChecksumAddress('0xde2Aec800eBecEfF16cEac9EEE2789D56Ea95B76');
   	  await sender.addNewToken(satva, arbitary_addr);
   	});
 
@@ -19,4 +20,17 @@ contract('token_management', function(accounts) {
     let address = await sender.tokens.call(satva);
     address.should.equal(arbitary_addr);
   });
+
+  updated_addr = web3.utils.toChecksumAddress('0x3fF68A19B5F892BB9e53eA67EF2E228b183A400A');
+  it("an existing token can have its address updated", async() => {
+  await sender.addNewToken(satva, updated_addr);
+  let address = await sender.tokens.call(satva);
+  address.should.equal(updated_addr);
+  });
+
+  it("existing token can be completly purged from DEXExchange", async() => {
+  await sender.removeToken(satva);
+  let address = await sender.tokens.call(satva);
+  address.should.equal('0x0000000000000000000000000000000000000000');
+});
 });
