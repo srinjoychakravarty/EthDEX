@@ -3,7 +3,8 @@ pragma solidity 0.4.24;
 import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract IndicaGeneSeed is StandardToken, Ownable{
+
+contract IndicaGeneSeed is StandardToken, Ownable {
 
     string public name;
     string public symbol;
