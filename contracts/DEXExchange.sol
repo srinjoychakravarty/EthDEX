@@ -17,28 +17,34 @@ contract DEXExchange is Ownable, Pausable {
     struct Transfer {
         address contract_;
         address to_;
-        uint amount_;
+        uint256 amount_;
         bool failed_;
     }
+
+    struct Altcoins {
+        address tokenContract;
+        uint256 exchangeRate;
+    }
+
+    /**
+    * @dev list of all supported tokens for transfer
+    * @param bytes32token symbol
+    * @param address contract address of token
+    */
+    mapping (bytes32 => Altcoins) public tokens;
 
     /**
     * @dev a mapping from transaction ID's to the sender address
     * that initiates them. Owners can create several transactions
     */
-    mapping(address => uint[]) public transactionIndexesToSender;
+    mapping(address => uint256[]) public transactionIndexesToSender;
 
     /**
     * @dev a list of all transfers successful or unsuccessful
     */
     Transfer[] public transactions;
-    address public owner;
 
-    /**
-    * @dev list of all supported tokens for transfer
-    * @param string token symbol
-    * @param address contract address of token
-    */
-    mapping(bytes32 => address) public tokens;
+    address public owner;
 
     ERC20 public erc20Interface;
 
@@ -50,16 +56,49 @@ contract DEXExchange is Ownable, Pausable {
     event TransferFailed(address indexed from_, address indexed to_, uint256 amount_);
 
     /**
-    * @dev allow contract to receive funds
+    * @dev We use a single lock for the whole contract.
     */
-    function() public payable {}
+    bool private rentrancyLock = false;
+
+    /** ReentrancyGuard mitigates against rentrancy hack scenarios such as recursive calls,
+    untrusted external callbacks, and low-level multi-dip calls, with a singleton lock to
+    guard function execution. When execution enters this guarded function, the global
+    boolean singleton is inspected and allows the transaction to only proceed if
+    false. Else it reverts the entire transaction. If execution proceeds, the
+    singleton is set to true, ensuring a subsequent re-entrant invocation
+    fails. The singleton is reset when execution exits the marked function.
+    */
+    modifier nonReentrant() {
+        require(!rentrancyLock);
+        rentrancyLock = true;
+        _;
+        rentrancyLock = false;
+    }
+
+    /**
+    * @dev fallback function can be used to buy tokens. It allows the CryptoCannabis
+    * contract to receive funds so that users can use it as an Decentralized Exchange
+    * to send in their ether deposits via ethereum transfers. This executes
+    * the fallback function where msg.value reflects the amount of ether
+    * deposited in wei by msg.sender. ERC-20 token rates are
+    * predetermined for tokens available to swap in the ATM
+    */
+    function depositEther(bytes32 symbol_) external nonReentrant payable {
+        uint256 weiAmount = msg.value;
+        address beneficiary = msg.sender;
+        _preValidatePurchase(beneficiary, weiAmount);
+        uint256 price = tokens[symbol_].exchangeRate;
+        uint256 erc20Tokens  = weiAmount*price;
+        transferTokens(symbol_, msg.sender, erc20Tokens);
+    }
 
     /**
     * @dev add address of token to list of supported tokens using
     * token symbol as identifier in mapping
     */
-    function addNewToken(bytes32 symbol_, address address_) public onlyOwner returns (bool) {
-        tokens[symbol_] = address_;
+    function addNewToken(bytes32 symbol_, address address_, uint256 price_) public onlyOwner returns (bool) {
+        tokens[symbol_].tokenContract = address_;
+        tokens[symbol_].exchangeRate = price_;
         return true;
     }
 
@@ -67,7 +106,7 @@ contract DEXExchange is Ownable, Pausable {
     * @dev remove address of token we no more support
     */
     function removeToken(bytes32 symbol_) public onlyOwner returns (bool) {
-        require(tokens[symbol_] != 0x0);
+        require(symbol_ != 0x0);
         delete (tokens[symbol_]);
         return true;
     }
@@ -81,9 +120,8 @@ contract DEXExchange is Ownable, Pausable {
     * @param amount_ numbers of token to transfer
     */
     function transferTokens(bytes32 symbol_, address to_, uint256 amount_) public whenNotPaused {
-        require(tokens[symbol_] != 0x0);
-        require(amount_ > 0);
-        address contract_ = tokens[symbol_];
+        require(symbol_ != 0x0);
+        address contract_ = tokens[symbol_].tokenContract;
         address from_ = msg.sender;
         erc20Interface = ERC20(contract_);
         // Adds a Transfer Object to the end of the transactions array of Transfer Objects
@@ -122,5 +160,13 @@ contract DEXExchange is Ownable, Pausable {
     */
     function withdraw(address beneficiary) public payable onlyOwner whenNotPaused {
         beneficiary.transfer(address(this).balance);
+    }
+
+    /**
+   * @dev Validation of an incoming purchase. Use require statements to revert state when conditions are not met.
+   */
+    function _preValidatePurchase(address beneficiary, uint256 weiAmount) internal view {
+        require(beneficiary != address(0));
+        require(weiAmount > 0);
     }
 }
