@@ -165,7 +165,7 @@ contract DEXExchange is Ownable, Pausable {
     /**
    * @dev Validation of an incoming purchase. Use require statements to revert state when conditions are not met.
    */
-    function _preValidatePurchase(address beneficiary, uint256 weiAmount) internal view {
+    function _preValidatePurchase(address beneficiary, uint256 weiAmount) internal pure {
         require(beneficiary != address(0));
         require(weiAmount > 0);
     }
