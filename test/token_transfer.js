@@ -20,7 +20,8 @@ contract('token_transfer', function(accounts) {
     sender = await DEXExchange.new();
     indica = await IndicaGeneSeed.new();
     symbol_indca = web3.utils.asciiToHex('INDCA');
-    await sender.addNewToken(symbol_indca, indica.address);
+    price = 3
+    await sender.addNewToken(symbol_indca, indica.address, price);
    });
 
 

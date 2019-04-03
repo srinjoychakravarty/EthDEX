@@ -13,7 +13,8 @@ contract('token_management', function(accounts) {
       satva = web3.utils.asciiToHex('SATVA');
       // Hex Address is converted to mixed case so that test passes
       arbitary_addr = web3.utils.toChecksumAddress('0xde2Aec800eBecEfF16cEac9EEE2789D56Ea95B76');
-  	  await sender.addNewToken(satva, arbitary_addr);
+      price = 2;
+  	  await sender.addNewToken(satva, arbitary_addr, price);
   	});
 
   it("a new supported token can be successfully added at a given address", async() => {
