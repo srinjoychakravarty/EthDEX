@@ -18,20 +18,22 @@ contract('token_management', function(accounts) {
   	});
 
   it("a new supported token can be successfully added at a given address", async() => {
-    let address = await sender.tokens.call(satva);
-    address.should.equal(arbitary_addr);
+    const object = await sender.tokens.call(satva);
+    let address = object.tokenContract;
+    address.should.equal('0xde2Aec800eBecEfF16cEac9EEE2789D56Ea95B76');
   });
 
-  updated_addr = web3.utils.toChecksumAddress('0x3fF68A19B5F892BB9e53eA67EF2E228b183A400A');
-  it("an existing token can have its address updated", async() => {
-  await sender.addNewToken(satva, updated_addr);
-  let address = await sender.tokens.call(satva);
-  address.should.equal(updated_addr);
+  it("a newly added token has the right exhange rate", async() => {
+    const object = await sender.tokens.call(satva);
+    // toNumber converts the returned big number datatype to integer for proper comparison
+    let address = object.exchangeRate.toNumber();
+    address.should.equal(2);
   });
 
-  it("existing token can be completly purged from DEXExchange", async() => {
+  it("an existing token can be completly purged from DEXExchange", async() => {
   await sender.removeToken(satva);
-  let address = await sender.tokens.call(satva);
+  const object = await sender.tokens.call(satva);
+  let address = object.tokenContract;
   address.should.equal('0x0000000000000000000000000000000000000000');
 });
 });
