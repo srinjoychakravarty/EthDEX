@@ -13,7 +13,7 @@ contract IndicaGeneSeed is StandardToken, Ownable {
     constructor() public {
         symbol = "INDCA";
         name = "IndicaGeneSeed";
-        decimals = 5;
+        decimals = 6;
         totalSupply_ = 100000000000;
         owner = msg.sender;
         balances[msg.sender] = totalSupply_;

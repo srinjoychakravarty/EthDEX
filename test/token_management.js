@@ -13,7 +13,7 @@ contract('token_management', function(accounts) {
       satva = web3.utils.asciiToHex('SATVA');
       // Hex Address is converted to mixed case so that test passes
       arbitary_addr = web3.utils.toChecksumAddress('0xde2Aec800eBecEfF16cEac9EEE2789D56Ea95B76');
-      price = 2;
+      price = 163000000000000*5;
   	  await sender.addNewToken(satva, arbitary_addr, price);
   	});
 
@@ -27,7 +27,7 @@ contract('token_management', function(accounts) {
     const object = await sender.tokens.call(satva);
     // toNumber converts the returned big number datatype to integer for proper comparison
     let address = object.exchangeRate.toNumber();
-    address.should.equal(2);
+    address.should.equal(815000000000000);
   });
 
   it("an existing token can be completly purged from DEXExchange", async() => {
